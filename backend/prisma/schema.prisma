@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sentFiles     FileTransfer[] @relation("SentFiles")
+  receivedFiles FileTransfer[] @relation("ReceivedFiles")
+  files         File[]
+}
+
+model File {
+  id               String   @id @default(uuid())
+  originalName     String
+  encryptedName    String
+  size             Int
+  mimeType         String
+  encryptedPath    String
+  uploadedAt       DateTime @default(now())
+  
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  transfers        FileTransfer[]
+}
+
+model FileTransfer {
+  id          String   @id @default(uuid())
+  status      String   @default("pending") // pending, received, decrypted
+  sentAt      DateTime @default(now())
+  receivedAt  DateTime?
+  decryptedAt DateTime?
+  
+  fileId      String
+  file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  
+  senderId    String
+  sender      User     @relation("SentFiles", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  receiverId  String
+  receiver    User     @relation("ReceivedFiles", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([fileId])
+}
+
+model OnlineUser {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  socketId  String
+  username  String
+  email     String
+  connectedAt DateTime @default(now())
+  lastSeen    DateTime @default(now())
+}
