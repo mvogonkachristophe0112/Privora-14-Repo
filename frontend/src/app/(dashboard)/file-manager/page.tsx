@@ -4,7 +4,13 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { formatFileSize } from '@/lib/crypto';
 import toast from 'react-hot-toast';
-import { Trash2, Download } from 'lucide-react';
+import { Card, CardBody, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Loading } from '@/components/ui/Loading';
+import { Trash2, Download, FileText, Search, Filter } from 'lucide-react';
 
 interface File {
   id: string;
@@ -35,10 +41,8 @@ export default function FileManagerPage() {
     }
   };
 
-  const handleDelete = async (fileId: string) => {
-    if (!confirm('Are you sure you want to delete this file?')) {
-      return;
-    }
+  const handleDelete = async (fileId: string, filename: string) => {
+    if (!confirm(`Delete "${filename}"?`)) return;
 
     try {
       await api.delete(`/files/${fileId}`);
@@ -76,94 +80,106 @@ export default function FileManagerPage() {
     file.originalName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-2">File Manager</h1>
-      <p className="text-gray-600 mb-8">Manage your uploaded files</p>
+  if (loading) {
+    return <Loading text="Loading files..." />;
+  }
 
-      {/* Search */}
-      <div className="mb-6">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search files..."
-          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-        />
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">File Manager</h1>
+          <p className="text-gray-600">{files.length} files uploaded</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 sm:flex-initial sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search files..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+            />
+          </div>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      ) : filteredFiles.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-600">
-            {searchTerm ? 'No files match your search' : 'No files uploaded yet'}
-          </p>
-        </div>
+      {/* Files List */}
+      {filteredFiles.length === 0 ? (
+        <Card>
+          <CardBody>
+            <EmptyState
+              icon="📁"
+              title={searchTerm ? 'No files match your search' : 'No files uploaded yet'}
+              description={searchTerm ? 'Try a different search term' : 'Upload files by sending them to other users'}
+            />
+          </CardBody>
+        </Card>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  File Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Size
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Uploaded
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredFiles.map((file) => (
-                <tr key={file.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{file.originalName}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600">{formatFileSize(file.size)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600">{file.mimeType}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600">
-                      {new Date(file.uploadedAt).toLocaleDateString()}
+        <div className="space-y-3">
+          {filteredFiles.map((file) => (
+            <Card key={file.id} hover>
+              <CardBody className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-primary-50 rounded-xl">
+                    <FileText className="w-6 h-6 text-primary-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 truncate mb-1">
+                      {file.originalName}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                      <span>{formatFileSize(file.size)}</span>
+                      <span>•</span>
+                      <span>{file.mimeType}</span>
+                      <span>•</span>
+                      <span>{new Date(file.uploadedAt).toLocaleDateString()}</span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleDownload(file.id, file.originalName)}
-                      className="text-primary-600 hover:text-primary-900 mr-4"
                       title="Download (encrypted)"
                     >
                       <Download size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(file.id)}
-                      className="text-red-600 hover:text-red-900"
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(file.id, file.originalName)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       title="Delete"
                     >
                       <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </Button>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          ))}
         </div>
       )}
+
+      {/* Info Card */}
+      <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+        <CardBody className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-white rounded-lg shadow-sm">
+              <FileText className="w-6 h-6 text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 mb-1">About Your Files</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                All files are stored in encrypted form. Download them here to get the encrypted version, or decrypt them in the Receive page if they were sent to you.
+              </p>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
     </div>
   );
 }
