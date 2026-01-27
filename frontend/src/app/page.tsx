@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Shield, Zap, Globe, Lock, Users, FileCheck } from 'lucide-react';
+import FeatureShowcase from '@/components/FeatureShowcase';
 
 export default function Home() {
   return (
@@ -67,24 +68,8 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Feature Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-            <FeatureCard
-              icon={<Lock className="w-8 h-8" />}
-              title="AES-256-GCM"
-              description="Military-grade encryption in your browser"
-            />
-            <FeatureCard
-              icon={<Zap className="w-8 h-8" />}
-              title="Real-time"
-              description="Instant notifications and presence"
-            />
-            <FeatureCard
-              icon={<Globe className="w-8 h-8" />}
-              title="Zero-knowledge"
-              description="Keys never leave your device"
-            />
-          </div>
+          {/* Interactive Feature Showcase */}
+          <FeatureShowcase />
 
           {/* Additional Features */}
           <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-8 text-left">
