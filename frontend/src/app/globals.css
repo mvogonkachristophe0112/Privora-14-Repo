@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile Optimizations */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific fixes */
+  input, textarea, select {
+    font-size: 16px !important; /* Prevents zoom on focus */
+  }
+}
+
 /* Design System - CSS Variables */
 :root {
   /* Colors - Primary */
