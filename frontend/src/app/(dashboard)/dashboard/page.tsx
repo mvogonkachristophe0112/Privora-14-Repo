@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import Link from 'next/link';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
+import ServerInfo from '@/components/ServerInfo';
 import { FileText, Send, Download, Users, ArrowRight, TrendingUp } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -124,6 +125,9 @@ export default function DashboardPage() {
           />
         </div>
       </div>
+
+      {/* Server Info - LAN Access */}
+      <ServerInfo />
 
       {/* Recent Activity */}
       <div>

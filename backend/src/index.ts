@@ -26,15 +26,21 @@ const httpServer = createServer(app);
 // Setup Socket.IO with CORS
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST'],
+    origin: (origin, callback) => {
+      // Allow all origins for local network deployment
+      callback(null, true);
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
   },
 });
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow all origins for local network deployment
+    callback(null, true);
+  },
   credentials: true,
 }));
 
@@ -60,6 +66,31 @@ app.get('/health', (_req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
+  });
+});
+
+// Get server IP endpoint
+app.get('/api/server-info', (_req, res) => {
+  const os = require('os');
+  const networkInterfaces = os.networkInterfaces();
+  let serverIP = 'localhost';
+  
+  // Find the first non-internal IPv4 address
+  for (const name of Object.keys(networkInterfaces)) {
+    for (const net of networkInterfaces[name] || []) {
+      if (net.family === 'IPv4' && !net.internal) {
+        serverIP = net.address;
+        break;
+      }
+    }
+    if (serverIP !== 'localhost') break;
+  }
+  
+  res.json({
+    serverIP,
+    frontendURL: `http://${serverIP}:3000`,
+    backendURL: `http://${serverIP}:5000`,
+    socketURL: `http://${serverIP}:5000`,
   });
 });
 
